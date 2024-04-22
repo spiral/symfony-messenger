@@ -1,56 +1,69 @@
 {
-  "name": ":vendor_slug/:package_slug",
-  "description": ":package_description",
-  "keywords": [
-    ":vendor_name",
-    "spiral",
-    ":package_slug"
-  ],
-  "homepage": "https://github.com/:vendor_slug/:package_slug",
-  "license": "MIT",
-  "authors": [
-    {
-      "name": ":author_name",
-      "email": "author@domain.com",
-      "role": "Developer"
-    }
-  ],
-  "require": {
-    "php": "^8.1",
-    "spiral/boot": "^3.7",
-    "spiral/console": "^3.7"
-  },
-  "require-dev": {
-    "mockery/mockery": "^1.5",
-    "phpunit/phpunit": "^10.1",
-    "spiral/testing": "^2.0",
-    "vimeo/psalm": "^5.9"
-  },
-  "autoload": {
-    "psr-4": {
-      "VendorName\\Skeleton\\": "src"
-    }
-  },
-  "autoload-dev": {
-    "psr-4": {
-      "VendorName\\Skeleton\\Tests\\App\\": "tests/app",
-      "VendorName\\Skeleton\\Tests\\": "tests/src"
-    }
-  },
-  "scripts": {
-    "test": "vendor/bin/phpunit",
-    "psalm": "vendor/bin/psalm --config=psalm.xml ./src"
-  },
-  "config": {
-    "sort-packages": true
-  },
-  "extra": {
-    "spiral": {
-      "bootloaders": [
-        "VendorName\\Skeleton\\Bootloader\\SkeletonBootloader"
-      ]
-    }
-  },
-  "minimum-stability": "dev",
-  "prefer-stable": true
+    "name": "spiral-packages/symfony-messenger",
+    "description": "This is my package symfony-messenger",
+    "keywords": [
+        "spiral-packages",
+        "spiral",
+        "jobs",
+        "queue"
+    ],
+    "homepage": "https://github.com/spiral-packages/symfony-messenger",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "butschster",
+            "email": "butschster@gmail.com",
+            "role": "Developer"
+        }
+    ],
+    "require": {
+        "php": "^8.2",
+        "roadrunner-php/lock": "^1.0",
+        "spiral-packages/symfony-serializer": "^2.2",
+        "spiral/boot": "^3.11",
+        "spiral/config": "^3.11",
+        "spiral/console": "^3.11",
+        "spiral/core": "^3.11",
+        "spiral/hmvc": "^3.11",
+        "spiral/roadrunner-jobs": "^4.3",
+        "symfony/messenger": "^7.0",
+        "symfony/serializer": "^7.0"
+    },
+    "require-dev": {
+        "mockery/mockery": "^1.5",
+        "phpunit/phpunit": "^10.1",
+        "spiral/framework": "^3.12",
+        "spiral/testing": "^2.7",
+        "vimeo/psalm": "^5.9"
+    },
+    "autoload": {
+        "psr-4": {
+            "Spiral\\Messenger\\": "src"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Spiral\\Messenger\\Tests\\App\\": "tests/app",
+            "Spiral\\Messenger\\Tests\\": "tests/src"
+        }
+    },
+    "scripts": {
+        "test": "vendor/bin/phpunit",
+        "psalm": "vendor/bin/psalm --config=psalm.xml ./src"
+    },
+    "config": {
+        "sort-packages": true,
+        "allow-plugins": {
+            "spiral/composer-publish-plugin": true
+        }
+    },
+    "extra": {
+        "spiral": {
+            "bootloaders": [
+                "Spiral\\Messenger\\Bootloader\\MessengerBootloader"
+            ]
+        }
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true
 }

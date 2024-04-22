@@ -1,20 +1,67 @@
 <?php
 
-namespace VendorName\Skeleton\Tests;
+namespace Spiral\Messenger\Tests;
 
-class TestCase extends \Spiral\Testing\TestCase
+use Mockery\MockInterface;
+use Spiral\Core\Container;
+use Spiral\Messenger\Tests\App\Kernel;
+use Spiral\Messenger\Tests\Mock\ConsumerMock;
+use Spiral\Messenger\Tests\Mock\JobsMock;
+use Spiral\Messenger\Tests\Mock\SerializerMock;
+use Spiral\RoadRunner\Jobs\ConsumerInterface;
+use Spiral\RoadRunner\WorkerInterface;
+use Spiral\Serializer\SerializerRegistryInterface;
+use Spiral\RoadRunner\Jobs\JobsInterface;
+use Spiral\Testing\TestableKernelInterface;
+use Spiral\Testing\TestApp;
+use Symfony\Component\Messenger\MessageBusInterface;
+
+abstract class TestCase extends \Spiral\Testing\TestCase
 {
     public function rootDirectory(): string
     {
-        return __DIR__.'/../';
+        return __DIR__ . '/../';
     }
 
-    public function defineBootloaders(): array
+    public function createAppInstance(Container $container = new Container()): TestableKernelInterface
     {
-        return [
-            \Spiral\Boot\Bootloader\ConfigurationBootloader::class,
-            \VendorName\Skeleton\SkeletonBootloader::class,
-            // ...
-        ];
+        return Kernel::create(
+            $this->defineDirectories($this->rootDirectory()),
+            false
+        );
+    }
+
+    public function getBus(): MessageBusInterface
+    {
+        return $this->getContainer()->get(MessageBusInterface::class);
+    }
+
+    public function mockJobsService(): JobsMock
+    {
+        return new JobsMock(
+            $this->mockContainer(JobsInterface::class),
+        );
+    }
+
+    public function mockSerializer(): SerializerMock
+    {
+        return new SerializerMock(
+            $this->mockContainer(SerializerRegistryInterface::class),
+        );
+    }
+
+    public function mockWorker(): MockInterface&WorkerInterface
+    {
+        return $this->mockContainer(WorkerInterface::class);
+    }
+
+    public function mockConsumer(?MockInterface $worker = null): ConsumerMock
+    {
+        \assert($worker instanceof WorkerInterface || $worker === null);
+
+        return new ConsumerMock(
+            consumer: $this->mockContainer(ConsumerInterface::class),
+            worker: $worker ?? $this->mockWorker(),
+        );
     }
 }

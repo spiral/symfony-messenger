@@ -13,4 +13,10 @@
             <directory>src</directory>
         </include>
     </coverage>
+    <php>
+        <env name="MESSENGER_DEFAULT_PIPELINE" value="default"/>
+        <env name="RR_MODE" value="jobs"/>
+        <ini name="error_reporting" value="-1"/>
+        <ini name="memory_limit" value="-1"/>
+    </php>
 </phpunit>
