@@ -22,6 +22,7 @@ use Spiral\Messenger\Sender\RoadRunnerSender;
 use Spiral\Messenger\Sender\SenderMapRegistry;
 use Spiral\Messenger\Sender\SenderMapRegistryInterface;
 use Spiral\Messenger\Sender\SendersProviderInterface;
+use Spiral\Messenger\Serializer\BodyContext;
 use Spiral\Messenger\Serializer\Serializer;
 use Spiral\RoadRunner\Jobs\JobsInterface;
 use Spiral\Serializer\Config\SerializerConfig;
@@ -74,11 +75,8 @@ final class MessengerBootloader extends Bootloader
             HandlersLocatorInterface::class => HandlersLocator::class,
             HandlersRegistryInterface::class => HandlersLocator::class,
 
-            SerializerInterface::class => static fn(
-                SerializerConfig $config,
-                SymfonySerializerInterface $serializer,
-            ): SerializerInterface => new Serializer(
-                serializer: $serializer,
+            SerializerInterface::class => Serializer::class,
+            BodyContext::class => static fn(SerializerConfig $config): BodyContext => new BodyContext(
                 format: $config->getDefault(),
             ),
 
