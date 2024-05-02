@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Spiral\Messenger\Middleware;
 
 use Spiral\Messenger\Attribute\RetryStrategy;
+use Spiral\Messenger\Stamp\RetryHandlerStamp;
 use Symfony\Component\Messenger\Envelope;
 use Symfony\Component\Messenger\Exception\HandlerFailedException;
 use Symfony\Component\Messenger\Exception\RecoverableExceptionInterface;
@@ -62,6 +63,7 @@ final class SendFailedMessageForRetryMiddleware implements MiddlewareInterface
 
             $delay = $strategy->getWaitingTime($envelope, $e);
             $retryCount = RedeliveryStamp::getRetryCountFromEnvelope($envelope);
+            $retryHandler = $envelope->last(RetryHandlerStamp::class);
 
             // add the delay and retry stamp info
             $retryEnvelope = $this->withLimitedHistory(
@@ -71,11 +73,17 @@ final class SendFailedMessageForRetryMiddleware implements MiddlewareInterface
             )
                 ->withoutAll(ReceivedStamp::class)
                 ->withoutAll(ConsumedByWorkerStamp::class)
+                ->withoutAll(RetryHandlerStamp::class)
                 ->withoutAll(AckStamp::class);
 
-            // TODO: probably we need to use task from context instead of pushing a new job to the queue
-            foreach ($this->sendersLocator->getSenders($retryEnvelope) as $sender) {
-                $sender->send($retryEnvelope);
+            // Check there is a retry handler stamp
+            if ($retryHandler !== null) {
+                // Use contextual task pusher
+                $retryHandler->retry($retryEnvelope, $e);
+            } else {
+                foreach ($this->sendersLocator->getSenders($retryEnvelope) as $sender) {
+                    $sender->send($retryEnvelope);
+                }
             }
 
             // TODO: rethrow the exception to be handled by the next middleware???

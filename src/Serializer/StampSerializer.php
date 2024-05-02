@@ -51,6 +51,9 @@ final readonly class StampSerializer
         return $stamps;
     }
 
+    /**
+     * @return array<non-empty-string, string>
+     */
     public function encodeStamps(Envelope $envelope): array
     {
         if (!$allStamps = $envelope->all()) {
