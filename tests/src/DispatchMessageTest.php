@@ -7,7 +7,6 @@ namespace Spiral\Messenger\Tests;
 use Ramsey\Uuid\Uuid;
 use Spiral\Messenger\Dispatcher;
 use Spiral\Messenger\Exception\StopWorkerException;
-use Spiral\Messenger\Sender\SendersProviderInterface;
 use Spiral\Messenger\Tests\App\Message\Message;
 use Spiral\RoadRunner\Payload;
 

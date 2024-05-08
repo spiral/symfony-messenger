@@ -16,7 +16,7 @@ final class TaskState
     private const STATE_FAILED = 2;
     private const STATE_RETRIED = 3;
 
-    private int $state;
+    private int $state = self::STATE_PENDING;
 
     public function __construct(
         public readonly StampSerializer $serializer,
