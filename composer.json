@@ -1,18 +1,24 @@
 {
-    "name": "spiral-packages/symfony-messenger",
-    "description": "This is my package symfony-messenger",
+    "name": "spiral/symfony-messenger",
+    "description": "Symfony Messenger integration for Spiral",
     "keywords": [
-        "spiral-packages",
         "spiral",
         "jobs",
-        "queue"
+        "queue",
+        "messenger",
+        "symfony"
     ],
-    "homepage": "https://github.com/spiral-packages/symfony-messenger",
+    "homepage": "https://github.com/spiral/symfony-messenger",
     "license": "MIT",
     "authors": [
         {
             "name": "butschster",
             "email": "butschster@gmail.com",
+            "role": "Developer"
+        },
+        {
+            "name": "roxblnfk",
+            "email": "roxblnfk@gmail.com",
             "role": "Developer"
         }
     ],
@@ -31,10 +37,10 @@
     },
     "require-dev": {
         "mockery/mockery": "^1.5",
-        "phpunit/phpunit": "^10.1",
+        "phpunit/phpunit": "^10",
         "spiral/framework": "dev-refactor-interceptors-target as 3.13",
         "spiral/testing": "^2.7",
-        "vimeo/psalm": "^5.9"
+        "vimeo/psalm": "^5.24"
     },
     "autoload": {
         "psr-4": {

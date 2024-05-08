@@ -21,7 +21,6 @@ use Symfony\Component\Messenger\Stamp\RedeliveryStamp;
 use Symfony\Component\Messenger\Stamp\StampInterface;
 use Symfony\Component\Messenger\Transport\Sender\SendersLocatorInterface;
 
-// TODO not implemented yet
 final class SendFailedMessageForRetryMiddleware implements MiddlewareInterface
 {
     public function __construct(
@@ -48,7 +47,6 @@ final class SendFailedMessageForRetryMiddleware implements MiddlewareInterface
 
                 [$handler, $method] = \explode('@', $lastKey);
                 $refl = new \ReflectionMethod($handler, $method);
-                $attr = $refl->getAttributes(RetryStrategy::class);
 
                 $strategy = $this->getRetryStrategy($exceptions[$lastKey], $refl);
             }
@@ -139,7 +137,7 @@ final class SendFailedMessageForRetryMiddleware implements MiddlewareInterface
                 continue;
             }
 
-            $history = array_merge(
+            $history = \array_merge(
                 [$history[0]],
                 \array_slice($history, -$this->historySize + 2),
                 [$stamp],
@@ -161,6 +159,6 @@ final class SendFailedMessageForRetryMiddleware implements MiddlewareInterface
             $attribute = \count($attrs) > 0 ? $attrs[0]->newInstance() : null;
         }
 
-        return $attribute?->getRetryStrategy() ?? null;
+        return $attribute?->getRetryStrategy();
     }
 }
