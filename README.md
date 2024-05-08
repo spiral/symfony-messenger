@@ -1,11 +1,11 @@
-# This is my package symfony-messanger
+# This is my package symfony-messenger
 
-[![PHP Version Require](https://poser.pugx.org/spiral/symfony-messanger/require/php)](https://packagist.org/packages/spiral/symfony-messanger)
-[![Latest Stable Version](https://poser.pugx.org/spiral/symfony-messanger/v/stable)](https://packagist.org/packages/spiral/symfony-messanger)
-[![phpunit](https://github.com/spiral/symfony-messanger/actions/workflows/phpunit.yml/badge.svg)](https://github.com/spiral/symfony-messanger/actions)
-[![psalm](https://github.com/spiral/symfony-messanger/actions/workflows/psalm.yml/badge.svg)](https://github.com/spiral/symfony-messanger/actions)
-[![Codecov](https://codecov.io/gh/spiral/symfony-messanger/branch/master/graph/badge.svg)](https://codecov.io/gh/spiral/symfony-messanger/)
-[![Total Downloads](https://poser.pugx.org/spiral/symfony-messanger/downloads)](https://packagist.org/spiral/symfony-messanger/phpunit)
+[![PHP Version Require](https://poser.pugx.org/spiral/symfony-messenger/require/php)](https://packagist.org/packages/spiral/symfony-messenger)
+[![Latest Stable Version](https://poser.pugx.org/spiral/symfony-messenger/v/stable)](https://packagist.org/packages/spiral/symfony-messenger)
+[![phpunit](https://github.com/spiral/symfony-messenger/actions/workflows/phpunit.yml/badge.svg)](https://github.com/spiral/symfony-messenger/actions)
+[![psalm](https://github.com/spiral/symfony-messenger/actions/workflows/psalm.yml/badge.svg)](https://github.com/spiral/symfony-messenger/actions)
+[![Codecov](https://codecov.io/gh/spiral/symfony-messenger/branch/master/graph/badge.svg)](https://codecov.io/gh/spiral/symfony-messenger/)
+[![Total Downloads](https://poser.pugx.org/spiral/symfony-messenger/downloads)](https://packagist.org/spiral/symfony-messenger/phpunit)
 
 
 This is where your description should go. Limit it to a paragraph or two. Consider adding a small example.
@@ -23,7 +23,7 @@ Make sure that your server is configured with following PHP version and extensio
 You can install the package via composer:
 
 ```bash
-composer require spiral/symfony-messanger
+composer require spiral/symfony-messenger
 ```
 
 After package install you need to register bootloader from the package.
@@ -31,7 +31,7 @@ After package install you need to register bootloader from the package.
 ```php
 protected const LOAD = [
     // ...
-    \Spiral\SymfonyMessanger\Bootloader\MessengerBootloader::class,
+    \Spiral\Symfonymessenger\Bootloader\MessengerBootloader::class,
 ];
 ```
 
