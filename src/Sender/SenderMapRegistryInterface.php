@@ -11,7 +11,7 @@ interface SenderMapRegistryInterface
     /**
      * Register sender for specific handler.
      *
-     * @param string $handler
+     * @param non-empty-string $handler
      * @param class-string<SenderInterface>|non-empty-string $sender
      */
     public function register(string $handler, string $sender): void;

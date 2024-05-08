@@ -51,7 +51,7 @@ final class HandlersRegistry implements HandlersRegistryInterface, TokenizationL
 
     public function finalize(): void
     {
-        // TODO: Implement finalize() method.
+        // Do nothing
     }
 
     /**

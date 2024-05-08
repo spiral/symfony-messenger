@@ -8,12 +8,16 @@ use Spiral\Core\Attribute\Singleton;
 use Spiral\Messenger\Attribute\TargetSender;
 use Spiral\Tokenizer\Attribute\TargetAttribute;
 use Spiral\Tokenizer\TokenizationListenerInterface;
+use Symfony\Component\Messenger\Transport\Sender\SenderInterface;
 
 #[TargetAttribute(TargetSender::class)]
 #[Singleton]
 final class SenderMapRegistry implements SenderMapRegistryInterface, SendersProviderInterface,
                                          TokenizationListenerInterface
 {
+    /**
+     * @param array<non-empty-string, list<class-string<SenderInterface>|non-empty-string>> $senders
+     */
     public function __construct(
         private array $senders = [],
     ) {
@@ -21,7 +25,10 @@ final class SenderMapRegistry implements SenderMapRegistryInterface, SendersProv
 
     public function register(string $handler, string $sender): void
     {
-        $this->senders[$handler] = $sender;
+        // Deduplicate senders
+        if (!\in_array($sender, $this->senders[$handler] ?? [], true)) {
+            $this->senders[$handler][] = $sender;
+        }
     }
 
     public function getSenders(): array
@@ -43,6 +50,6 @@ final class SenderMapRegistry implements SenderMapRegistryInterface, SendersProv
 
     public function finalize(): void
     {
-        // do nothing
+        // Do nothing
     }
 }

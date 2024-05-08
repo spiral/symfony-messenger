@@ -14,7 +14,7 @@ final class RetryHandlerStamp implements StampInterface
     ) {
     }
 
-    public function retry(Envelope $envelope, ?\Throwable $e = null): void
+    public function retry(Envelope $envelope, \Throwable $e): void
     {
         ($this->handler)($envelope, $e);
     }

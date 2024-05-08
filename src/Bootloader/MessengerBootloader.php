@@ -6,7 +6,6 @@ namespace Spiral\Messenger\Bootloader;
 
 use Psr\Container\ContainerInterface;
 use Spiral\Boot\Bootloader\Bootloader;
-use Spiral\Core\Container;
 use Spiral\Exceptions\ExceptionReporterInterface;
 use Spiral\Messenger\Config\MessengerConfig;
 use Spiral\Messenger\Handler\HandlersLocator;
@@ -34,8 +33,8 @@ use Symfony\Component\Messenger\MessageBusInterface;
 use Symfony\Component\Messenger\Middleware\HandleMessageMiddleware;
 use Symfony\Component\Messenger\Middleware\SendMessageMiddleware;
 use Symfony\Component\Messenger\Transport\Sender\SendersLocator;
+use Symfony\Component\Messenger\Transport\Sender\SendersLocatorInterface;
 use Symfony\Component\Messenger\Transport\Serialization\SerializerInterface;
-use Symfony\Component\Serializer\SerializerInterface as SymfonySerializerInterface;
 
 final class MessengerBootloader extends Bootloader
 {
@@ -93,13 +92,18 @@ final class MessengerBootloader extends Bootloader
                 aliases: [...$aliases->getAliases(), ...$config->getPipelineAliases()],
                 defaultPipeline: $config->getDefaultPipeline(),
             ),
-            SendersLocator::class => static fn(
-                Container $container,
+            SendersLocatorInterface::class => static fn(
+                ContainerInterface $container,
                 SendersProviderInterface $provider,
-            ): SendersLocator => new SendersLocator(
-                sendersMap: $provider->getSenders(),
-                sendersLocator: $container,
-            ),
+            ): SendersLocator =>
+                // todo:
+                // has sender interceptors?
+                // return \Spiral\Messenger\Sender\SendersLocator
+                // else
+                new SendersLocator(
+                    sendersMap: $provider->getSenders(),
+                    sendersLocator: $container,
+                )
         ];
     }
 

@@ -50,7 +50,7 @@ final class TaskState
      *
      * Used in {@see \Spiral\Messenger\Stamp\RetryHandlerStamp}
      */
-    public function retry(Envelope $envelope, ?\Throwable $e = null): void
+    public function retry(Envelope $envelope, \Throwable $e): void
     {
         if ($this->state !== self::STATE_PENDING) {
             return;
@@ -64,6 +64,7 @@ final class TaskState
         // Deal with delay
         $delay = $envelope->last(DelayStamp::class)?->getDelay();
         if ($delay >= 1000) {
+            /** @psalm-suppress ArgumentTypeCoercion */
             $task = $task->withDelay(\intdiv($delay, 1000));
         }
 

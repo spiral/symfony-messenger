@@ -32,7 +32,7 @@
     "require-dev": {
         "mockery/mockery": "^1.5",
         "phpunit/phpunit": "^10.1",
-        "spiral/framework": "^3.13",
+        "spiral/framework": "dev-refactor-interceptors-target as 3.13",
         "spiral/testing": "^2.7",
         "vimeo/psalm": "^5.9"
     },
