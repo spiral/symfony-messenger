@@ -9,12 +9,13 @@ use Spiral\Boot\FinalizerInterface;
 use Spiral\Core\Container;
 use Spiral\Core\Scope;
 use Spiral\Exceptions\ExceptionReporterInterface;
+use Spiral\Messenger\Dispatcher\TaskState;
 use Spiral\Messenger\Exception\RetryException;
-use Spiral\Messenger\Exception\StopWorkerException;
+use Spiral\Messenger\Serializer\StampSerializer;
+use Spiral\Messenger\Stamp\RetryHandlerStamp;
 use Spiral\RoadRunner\Environment\Mode;
 use Spiral\RoadRunner\EnvironmentInterface;
 use Spiral\RoadRunner\Jobs\ConsumerInterface;
-use Spiral\RoadRunner\Jobs\Exception\JobsException;
 use Spiral\RoadRunner\Jobs\OptionsInterface;
 use Spiral\RoadRunner\Jobs\Task\ReceivedTaskInterface;
 use Symfony\Component\Messenger\Envelope;
@@ -34,6 +35,7 @@ final class Dispatcher implements DispatcherInterface
         private readonly EnvironmentInterface $environment,
         private readonly SerializerInterface $serializer,
         private readonly ExceptionReporterInterface $reporter,
+        private readonly StampSerializer $stampSerializer,
     ) {
     }
 
@@ -74,20 +76,8 @@ final class Dispatcher implements DispatcherInterface
 
     private function handleMessage(ReceivedTaskInterface $task, Envelope $envelope): void
     {
-        $acked = false;
-        $ack = function (Envelope $envelope, ?\Throwable $e = null) use ($task, &$acked): void {
-            $acked = true;
-
-            if ($e !== null) {
-                $task->fail($e);
-                return;
-            }
-
-            $task->complete();
-        };
-
+        $state = new TaskState($this->stampSerializer, $task);
         $context = new Context($envelope, $task);
-
         $envelope = $this->container->runScope(
             new Scope(
                 name: 'jobs.queue',
@@ -95,19 +85,19 @@ final class Dispatcher implements DispatcherInterface
                     ContextInterface::class => $context,
                 ],
             ),
-            function (Container $container) use ($envelope, $ack): Envelope {
-                return $container->get(MessageBusInterface::class)->dispatch($envelope, [
+            static fn(Container $container): Envelope => $container
+                ->get(MessageBusInterface::class)
+                ->dispatch($envelope, [
                     new ConsumedByWorkerStamp(),
-                    new AckStamp($ack),
+                    new AckStamp($state->ack(...)),
+                    new RetryHandlerStamp($state->retry(...)),
                     new ReceivedStamp('roadrunner'),
-                ]);
-            },
+                ]),
         );
 
         $noAutoAckStamp = $envelope->last(NoAutoAckStamp::class);
-
-        if (!$acked && !$noAutoAckStamp) {
-            $ack($envelope);
+        if (!$state->isProcessed() && !$noAutoAckStamp) {
+            $state->ack($envelope);
         }
     }
 

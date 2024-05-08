@@ -6,10 +6,10 @@ namespace Spiral\Messenger\Bootloader;
 
 use Psr\Container\ContainerInterface;
 use Spiral\Boot\Bootloader\Bootloader;
-use Spiral\Core\Container;
 use Spiral\Exceptions\ExceptionReporterInterface;
 use Spiral\Messenger\Config\MessengerConfig;
 use Spiral\Messenger\Handler\HandlersLocator;
+use Spiral\Messenger\Handler\HandlersRegistry;
 use Spiral\Messenger\Handler\HandlersRegistryInterface;
 use Spiral\Messenger\Middleware\MiddlewareRegistry;
 use Spiral\Messenger\Middleware\MiddlewareRegistryInterface;
@@ -22,6 +22,7 @@ use Spiral\Messenger\Sender\RoadRunnerSender;
 use Spiral\Messenger\Sender\SenderMapRegistry;
 use Spiral\Messenger\Sender\SenderMapRegistryInterface;
 use Spiral\Messenger\Sender\SendersProviderInterface;
+use Spiral\Messenger\Serializer\BodyContext;
 use Spiral\Messenger\Serializer\Serializer;
 use Spiral\RoadRunner\Jobs\JobsInterface;
 use Spiral\Serializer\Config\SerializerConfig;
@@ -33,8 +34,8 @@ use Symfony\Component\Messenger\MessageBusInterface;
 use Symfony\Component\Messenger\Middleware\HandleMessageMiddleware;
 use Symfony\Component\Messenger\Middleware\SendMessageMiddleware;
 use Symfony\Component\Messenger\Transport\Sender\SendersLocator;
+use Symfony\Component\Messenger\Transport\Sender\SendersLocatorInterface;
 use Symfony\Component\Messenger\Transport\Serialization\SerializerInterface;
-use Symfony\Component\Serializer\SerializerInterface as SymfonySerializerInterface;
 
 final class MessengerBootloader extends Bootloader
 {
@@ -72,13 +73,10 @@ final class MessengerBootloader extends Bootloader
             ),
 
             HandlersLocatorInterface::class => HandlersLocator::class,
-            HandlersRegistryInterface::class => HandlersLocator::class,
+            HandlersRegistryInterface::class => HandlersRegistry::class,
 
-            SerializerInterface::class => static fn(
-                SerializerConfig $config,
-                SymfonySerializerInterface $serializer,
-            ): SerializerInterface => new Serializer(
-                serializer: $serializer,
+            SerializerInterface::class => Serializer::class,
+            BodyContext::class => static fn(SerializerConfig $config): BodyContext => new BodyContext(
                 format: $config->getDefault(),
             ),
 
@@ -95,34 +93,39 @@ final class MessengerBootloader extends Bootloader
                 aliases: [...$aliases->getAliases(), ...$config->getPipelineAliases()],
                 defaultPipeline: $config->getDefaultPipeline(),
             ),
-            SendersLocator::class => static fn(
-                Container $container,
+            SendersLocatorInterface::class => static fn(
+                ContainerInterface $container,
                 SendersProviderInterface $provider,
-            ): SendersLocator => new SendersLocator(
-                sendersMap: $provider->getSenders(),
-                sendersLocator: $container,
-            ),
+            ): SendersLocator =>
+                // todo:
+                // has sender interceptors?
+                // return \Spiral\Messenger\Sender\SendersLocator
+                // else
+                new SendersLocator(
+                    sendersMap: trap($provider->getSenders())->return(),
+                    sendersLocator: $container,
+                )
         ];
     }
 
     public function init(
         TokenizerListenerRegistryInterface $registry,
         RoadRunnerPipelineRegistry $listener,
-        HandlersLocator $handlersLocator,
+        HandlersRegistry $handlersRegistry,
         SenderMapRegistry $sendersRegistry,
     ): void {
         $registry->addListener($listener);
-        $registry->addListener($handlersLocator);
+        $registry->addListener($handlersRegistry);
         $registry->addListener($sendersRegistry);
     }
 
     public function boot(
         MiddlewareRegistryInterface $middlewareRegistry,
-        HandlersLocator $handlersLocator,
-        SendersLocator $sendersLocator,
+        HandlersLocatorInterface $handlersLocator,
+        SendersLocatorInterface $sendersLocator,
         MessengerConfig $config,
     ): void {
-        foreach ($this->getMiddlewares($sendersLocator, $config, $handlersLocator) as $priority => $middleware) {
+        foreach ($this->getMiddlewares($handlersLocator, $sendersLocator, $config) as $priority => $middleware) {
             $middlewareRegistry->addMiddleware(middleware: $middleware, priority: $priority);
         }
 
@@ -132,9 +135,9 @@ final class MessengerBootloader extends Bootloader
     }
 
     private function getMiddlewares(
-        SendersLocator $sendersLocator,
+        HandlersLocatorInterface $handlersLocator,
+        SendersLocatorInterface $sendersLocator,
         MessengerConfig $config,
-        HandlersLocator $handlersLocator,
     ): iterable {
         yield MiddlewareRegistryInterface::HIGH_PRIORITY => new SendFailedMessageForRetryMiddleware(
             sendersLocator: $sendersLocator,

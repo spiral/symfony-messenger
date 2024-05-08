@@ -9,7 +9,7 @@ use Symfony\Component\Messenger\Transport\Sender\SenderInterface;
 interface SendersProviderInterface
 {
     /**
-     * @return array<string, class-string<SenderInterface>|non-empty-string>
+     * @return array<non-empty-string, list<class-string<SenderInterface>|non-empty-string>>
      */
     public function getSenders(): array;
 }

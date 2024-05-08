@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Spiral\Messenger\Middleware;
 
 use Spiral\Messenger\Attribute\RetryStrategy;
+use Spiral\Messenger\Stamp\RetryHandlerStamp;
 use Symfony\Component\Messenger\Envelope;
 use Symfony\Component\Messenger\Exception\HandlerFailedException;
 use Symfony\Component\Messenger\Exception\RecoverableExceptionInterface;
@@ -20,7 +21,6 @@ use Symfony\Component\Messenger\Stamp\RedeliveryStamp;
 use Symfony\Component\Messenger\Stamp\StampInterface;
 use Symfony\Component\Messenger\Transport\Sender\SendersLocatorInterface;
 
-// TODO not implemented yet
 final class SendFailedMessageForRetryMiddleware implements MiddlewareInterface
 {
     public function __construct(
@@ -47,7 +47,6 @@ final class SendFailedMessageForRetryMiddleware implements MiddlewareInterface
 
                 [$handler, $method] = \explode('@', $lastKey);
                 $refl = new \ReflectionMethod($handler, $method);
-                $attr = $refl->getAttributes(RetryStrategy::class);
 
                 $strategy = $this->getRetryStrategy($exceptions[$lastKey], $refl);
             }
@@ -62,6 +61,7 @@ final class SendFailedMessageForRetryMiddleware implements MiddlewareInterface
 
             $delay = $strategy->getWaitingTime($envelope, $e);
             $retryCount = RedeliveryStamp::getRetryCountFromEnvelope($envelope);
+            $retryHandler = $envelope->last(RetryHandlerStamp::class);
 
             // add the delay and retry stamp info
             $retryEnvelope = $this->withLimitedHistory(
@@ -71,11 +71,17 @@ final class SendFailedMessageForRetryMiddleware implements MiddlewareInterface
             )
                 ->withoutAll(ReceivedStamp::class)
                 ->withoutAll(ConsumedByWorkerStamp::class)
+                ->withoutAll(RetryHandlerStamp::class)
                 ->withoutAll(AckStamp::class);
 
-            // TODO: probably we need to use task from context instead of pushing a new job to the queue
-            foreach ($this->sendersLocator->getSenders($retryEnvelope) as $sender) {
-                $sender->send($retryEnvelope);
+            // Check there is a retry handler stamp
+            if ($retryHandler !== null) {
+                // Use contextual task pusher
+                $retryHandler->retry($retryEnvelope, $e);
+            } else {
+                foreach ($this->sendersLocator->getSenders($retryEnvelope) as $sender) {
+                    $sender->send($retryEnvelope);
+                }
             }
 
             // TODO: rethrow the exception to be handled by the next middleware???
@@ -131,7 +137,7 @@ final class SendFailedMessageForRetryMiddleware implements MiddlewareInterface
                 continue;
             }
 
-            $history = array_merge(
+            $history = \array_merge(
                 [$history[0]],
                 \array_slice($history, -$this->historySize + 2),
                 [$stamp],
@@ -153,6 +159,6 @@ final class SendFailedMessageForRetryMiddleware implements MiddlewareInterface
             $attribute = \count($attrs) > 0 ? $attrs[0]->newInstance() : null;
         }
 
-        return $attribute?->getRetryStrategy() ?? null;
+        return $attribute?->getRetryStrategy();
     }
 }

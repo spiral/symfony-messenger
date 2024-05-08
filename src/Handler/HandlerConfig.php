@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Spiral\Messenger\Handler;
 
-final class Handler
+final class HandlerConfig
 {
     public function __construct(
         public readonly string $class,

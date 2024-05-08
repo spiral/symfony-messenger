@@ -4,36 +4,45 @@ declare(strict_types=1);
 
 namespace Spiral\Messenger\Handler;
 
+use Psr\EventDispatcher\EventDispatcherInterface;
 use Spiral\Core\Attribute\Singleton;
-use Spiral\Core\FactoryInterface;
-use Spiral\Messenger\Attribute\HandlerMethod;
-use Spiral\Messenger\Exception\InvalidHandlerException;
+use Spiral\Core\InterceptorPipeline;
+use Spiral\Interceptors\Context\CallContext;
+use Spiral\Interceptors\Context\Target;
+use Spiral\Interceptors\Handler\ReflectionHandler;
+use Spiral\Interceptors\HandlerInterface;
 use Spiral\Messenger\Stamp\AllowMultipleHandlers;
-use Spiral\Tokenizer\Attribute\TargetAttribute;
-use Spiral\Tokenizer\TokenizationListenerInterface;
 use Symfony\Component\Messenger\Envelope;
 use Symfony\Component\Messenger\Handler\HandlerDescriptor;
 use Symfony\Component\Messenger\Handler\HandlersLocatorInterface;
 use Symfony\Component\Messenger\Stamp\ReceivedStamp;
 
-#[TargetAttribute(HandlerMethod::class)]
+/**
+ * Symfony Messenger uses a locator to find handlers for a given message.
+ * Here we use the HandlersRegistry to get the handlers for a given message.
+ */
 #[Singleton]
-final class HandlersLocator implements HandlersLocatorInterface, HandlersRegistryInterface,
-                                       TokenizationListenerInterface
+final class HandlersLocator implements HandlersLocatorInterface
 {
-    /** @var array<class-string, array<int, Handler[]>> */
-    private array $handlers = [];
+    private readonly HandlerInterface $interceptorPipeline;
 
     public function __construct(
-        private readonly FactoryInterface $factory,
+        private readonly HandlersRegistryInterface $handlers,
+        ?EventDispatcherInterface $dispatcher = null,
+        ReflectionHandler $reflectionHandler,
     ) {
+        $this->interceptorPipeline = (new InterceptorPipeline($dispatcher))
+            ->withHandler($reflectionHandler);
+
+        // todo add interceptors list
+        // $this->interceptorPipeline->addInterceptor();
     }
 
     public function getHandlers(Envelope $envelope): iterable
     {
         $seen = [];
 
-        $handlerTypes = $this->handlers;
+        $handlerTypes = $this->handlers->getHandlers();
 
         $isMultipleHandlersAllowed = $envelope->last(AllowMultipleHandlers::class) !== null;
 
@@ -43,7 +52,7 @@ final class HandlersLocator implements HandlersLocatorInterface, HandlersRegistr
 
             foreach ($handlerTypes[$type] as $priority => $handlers) {
                 foreach ($handlers as $handler) {
-                    $handlerDescriptor = $this->buildHandlerDescriptor($handler);
+                    $handlerDescriptor = $this->buildHandlerDescriptor($handler, $envelope);
 
                     if (!$this->shouldHandle($envelope, $handlerDescriptor)) {
                         continue;
@@ -92,108 +101,21 @@ final class HandlersLocator implements HandlersLocatorInterface, HandlersRegistr
         return $received->getTransportName() === $expectedTransport;
     }
 
-    private function buildHandlerDescriptor(Handler $handler): HandlerDescriptor
+    private function buildHandlerDescriptor(HandlerConfig $handler, Envelope $envelope): HandlerDescriptor
     {
         return new HandlerDescriptor(
-            handler: [
-                $this->factory->make($handler->class),
-                $handler->method,
-            ],
+            handler: function (mixed ...$arguments) use ($handler, $envelope): mixed {
+                // Create call context to intercept job invocation
+                $callContext = new CallContext(
+                    Target::fromPair($handler->class, $handler->method),
+                    $arguments,
+                    $envelope->all(),
+                );
+
+                // Run interceptors pipeline
+                return $this->interceptorPipeline->handle($callContext);
+            },
             options: $handler->options,
         );
-    }
-
-    public function registerHandler(string $message, Handler $handler): void
-    {
-        $this->handlers[$message][$handler->priority][] = $handler;
-    }
-
-    /**
-     * @throws InvalidHandlerException
-     */
-    public function listen(\ReflectionClass $class): void
-    {
-        foreach ($class->getMethods() as $method) {
-            $attrs = $method->getAttributes(HandlerMethod::class);
-            if (\count($attrs) === 0) {
-                continue;
-            }
-
-            $attr = $attrs[0]->newInstance();
-
-            foreach ($this->processHandler($method, $attr) as $message => $handler) {
-                $this->handlers[$message][$handler->priority][] = $handler;
-            }
-        }
-    }
-
-    public function finalize(): void
-    {
-        // TODO: Implement finalize() method.
-    }
-
-    /**
-     * @return iterable<class-string, Handler>
-     * @throws InvalidHandlerException
-     */
-    private function processHandler(
-        \ReflectionMethod $method,
-        HandlerMethod $attr,
-    ): iterable {
-        $this->assertMethodIsPublic($method);
-
-        foreach ($this->getMethodParameters($method) as $parameter) {
-            if ($parameter->isBuiltin() || !\class_exists($parameter->getName())) {
-                continue;
-            }
-
-            yield $parameter->getName() => new Handler(
-                class: $method->getDeclaringClass()->getName(),
-                method: $method->getName(),
-                priority: $attr->priority,
-                options: $attr->options,
-            );
-        }
-    }
-
-    /**
-     * @throws InvalidHandlerException
-     */
-    private function assertMethodIsPublic(\ReflectionMethod $method): void
-    {
-        if (!$method->isPublic()) {
-            throw new InvalidHandlerException(
-                \sprintf(
-                    'Handler method %s:%s should be public.',
-                    $method->getDeclaringClass()->getName(),
-                    $method->getName(),
-                ),
-            );
-        }
-    }
-
-    /**
-     * @return \Traversable<int, \ReflectionNamedType>
-     */
-    private function getMethodParameters(\ReflectionMethod $method): \Traversable
-    {
-        foreach ($method->getParameters() as $parameter) {
-            yield from $this->getReturnType($parameter->getType());
-        }
-    }
-
-    private function getReturnType(\ReflectionType $type): \Traversable
-    {
-        if ($type instanceof \ReflectionUnionType) {
-            foreach ($type->getTypes() as $t) {
-                yield from $this->getReturnType($t);
-            }
-        } elseif ($type instanceof \ReflectionIntersectionType) {
-            foreach ($type->getTypes() as $t) {
-                yield from $this->getReturnType($t);
-            }
-        } else {
-            yield $type;
-        }
     }
 }

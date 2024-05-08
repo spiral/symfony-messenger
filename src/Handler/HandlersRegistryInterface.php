@@ -7,7 +7,12 @@ namespace Spiral\Messenger\Handler;
 interface HandlersRegistryInterface
 {
     /**
+     * @return array<class-string, array<int, HandlerConfig[]>>
+     */
+    public function getHandlers(): array;
+
+    /**
      * @param class-string $message
      */
-    public function registerHandler(string $message, Handler $handler): void;
+    public function registerHandler(string $message, HandlerConfig $handler): void;
 }

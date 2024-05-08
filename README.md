@@ -1,11 +1,11 @@
 # This is my package symfony-messanger
 
-[![PHP Version Require](https://poser.pugx.org/spiral-packages/symfony-messanger/require/php)](https://packagist.org/packages/spiral-packages/symfony-messanger)
-[![Latest Stable Version](https://poser.pugx.org/spiral-packages/symfony-messanger/v/stable)](https://packagist.org/packages/spiral-packages/symfony-messanger)
-[![phpunit](https://github.com/spiral-packages/symfony-messanger/actions/workflows/phpunit.yml/badge.svg)](https://github.com/spiral-packages/symfony-messanger/actions)
-[![psalm](https://github.com/spiral-packages/symfony-messanger/actions/workflows/psalm.yml/badge.svg)](https://github.com/spiral-packages/symfony-messanger/actions)
-[![Codecov](https://codecov.io/gh/spiral-packages/symfony-messanger/branch/master/graph/badge.svg)](https://codecov.io/gh/spiral-packages/symfony-messanger/)
-[![Total Downloads](https://poser.pugx.org/spiral-packages/symfony-messanger/downloads)](https://packagist.org/spiral-packages/symfony-messanger/phpunit)
+[![PHP Version Require](https://poser.pugx.org/spiral/symfony-messanger/require/php)](https://packagist.org/packages/spiral/symfony-messanger)
+[![Latest Stable Version](https://poser.pugx.org/spiral/symfony-messanger/v/stable)](https://packagist.org/packages/spiral/symfony-messanger)
+[![phpunit](https://github.com/spiral/symfony-messanger/actions/workflows/phpunit.yml/badge.svg)](https://github.com/spiral/symfony-messanger/actions)
+[![psalm](https://github.com/spiral/symfony-messanger/actions/workflows/psalm.yml/badge.svg)](https://github.com/spiral/symfony-messanger/actions)
+[![Codecov](https://codecov.io/gh/spiral/symfony-messanger/branch/master/graph/badge.svg)](https://codecov.io/gh/spiral/symfony-messanger/)
+[![Total Downloads](https://poser.pugx.org/spiral/symfony-messanger/downloads)](https://packagist.org/spiral/symfony-messanger/phpunit)
 
 
 This is where your description should go. Limit it to a paragraph or two. Consider adding a small example.
@@ -15,15 +15,15 @@ This is where your description should go. Limit it to a paragraph or two. Consid
 
 Make sure that your server is configured with following PHP version and extensions:
 
-- PHP 8.1+
-- Spiral framework 3.0+
+- PHP 8.2+
+- Spiral framework 3.13+
 
 ## Installation
 
 You can install the package via composer:
 
 ```bash
-composer require spiral-packages/symfony-messanger
+composer require spiral/symfony-messanger
 ```
 
 After package install you need to register bootloader from the package.
@@ -35,7 +35,7 @@ protected const LOAD = [
 ];
 ```
 
-> Note: if you are using [`spiral-packages/discoverer`](https://github.com/spiral-packages/discoverer),
+> Note: if you are using [`spiral/discoverer`](https://github.com/spiral/discoverer),
 > you don't need to register bootloader by yourself.
 
 ## Testing
@@ -58,7 +58,7 @@ Please review [our security policy](../../security/policy) on how to report secu
 
 ## Credits
 
-- [butschster](https://github.com/spiral-packages)
+- [butschster](https://github.com/spiral)
 - [All Contributors](../../contributors)
 
 ## License
