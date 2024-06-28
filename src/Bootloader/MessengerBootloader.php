@@ -15,7 +15,9 @@ use Spiral\Messenger\Middleware\MiddlewareRegistry;
 use Spiral\Messenger\Middleware\MiddlewareRegistryInterface;
 use Spiral\Messenger\Middleware\SendFailedMessageForRetryMiddleware;
 use Spiral\Messenger\Pipeline\PipelineAliasesProviderInterface;
+use Spiral\Messenger\Pipeline\PipelineProviderInterface;
 use Spiral\Messenger\Pipeline\PipelineRegistryInterface;
+use Spiral\Messenger\Pipeline\PipelinesProvider;
 use Spiral\Messenger\Pipeline\RoadRunnerPipelineRegistry;
 use Spiral\Messenger\RoutableMessageBus;
 use Spiral\Messenger\Sender\RoadRunnerSender;
@@ -52,7 +54,8 @@ final class MessengerBootloader extends Bootloader
     {
         return [
             PipelineRegistryInterface::class => RoadRunnerPipelineRegistry::class,
-            PipelineAliasesProviderInterface::class => RoadRunnerPipelineRegistry::class,
+            PipelineAliasesProviderInterface::class => PipelinesProvider::class,
+            PipelineProviderInterface::class => PipelinesProvider::class,
 
             SenderMapRegistryInterface::class => SenderMapRegistry::class,
             SendersProviderInterface::class => SenderMapRegistry::class,
@@ -110,7 +113,7 @@ final class MessengerBootloader extends Bootloader
 
     public function init(
         TokenizerListenerRegistryInterface $registry,
-        RoadRunnerPipelineRegistry $listener,
+        PipelinesProvider $listener,
         HandlersRegistry $handlersRegistry,
         SenderMapRegistry $sendersRegistry,
     ): void {

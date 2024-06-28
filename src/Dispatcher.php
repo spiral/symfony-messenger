@@ -11,6 +11,9 @@ use Spiral\Core\Scope;
 use Spiral\Exceptions\ExceptionReporterInterface;
 use Spiral\Messenger\Dispatcher\TaskState;
 use Spiral\Messenger\Exception\RetryException;
+use Spiral\Messenger\Pipeline\PipelineProviderInterface;
+use Spiral\Messenger\Pipeline\PipelineRegistryInterface;
+use Spiral\Messenger\Pipeline\Provider\PipelineConfig;
 use Spiral\Messenger\Serializer\StampSerializer;
 use Spiral\Messenger\Stamp\RetryHandlerStamp;
 use Spiral\RoadRunner\Environment\Mode;
@@ -36,6 +39,7 @@ final class Dispatcher implements DispatcherInterface
         private readonly SerializerInterface $serializer,
         private readonly ExceptionReporterInterface $reporter,
         private readonly StampSerializer $stampSerializer,
+        private readonly PipelineProviderInterface $pipelines,
     ) {
     }
 
@@ -48,6 +52,7 @@ final class Dispatcher implements DispatcherInterface
     {
         /** @var ConsumerInterface $consumer */
         $consumer = $this->container->get(ConsumerInterface::class);
+        $this->registerPipelines($this->container->get(PipelineRegistryInterface::class));
 
         while ($task = $consumer->waitTask()) {
             // TODO: use mapper for headers
@@ -110,5 +115,21 @@ final class Dispatcher implements DispatcherInterface
         }
 
         $task->fail($e, true);
+    }
+
+    private function registerPipelines(PipelineRegistryInterface $registry): void
+    {
+        /** @var PipelineConfig $item */
+        foreach ($this->pipelines->getIterator() as $item) {
+            if (!$item->pipeline->shouldBeUsed()) {
+                continue;
+            }
+
+            $registry->register(
+                info: $item->pipeline->info(),
+                aliases: $item->aliases,
+                consume: $item->pipeline->shouldConsume(),
+            );
+        }
     }
 }

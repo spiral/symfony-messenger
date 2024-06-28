@@ -12,6 +12,7 @@ use Spiral\Interceptors\Context\Target;
 use Spiral\Interceptors\Handler\ReflectionHandler;
 use Spiral\Interceptors\HandlerInterface;
 use Spiral\Messenger\Stamp\AllowMultipleHandlers;
+use Spiral\Messenger\Stamp\TargetHandler;
 use Symfony\Component\Messenger\Envelope;
 use Symfony\Component\Messenger\Handler\HandlerDescriptor;
 use Symfony\Component\Messenger\Handler\HandlersLocatorInterface;
@@ -103,18 +104,16 @@ final class HandlersLocator implements HandlersLocatorInterface
 
     private function buildHandlerDescriptor(HandlerConfig $handler, Envelope $envelope): HandlerDescriptor
     {
-        return new HandlerDescriptor(
-            handler: function (mixed ...$arguments) use ($handler, $envelope): mixed {
-                // Create call context to intercept job invocation
-                $callContext = new CallContext(
-                    Target::fromPair($handler->class, $handler->method),
-                    $arguments,
-                    $envelope->all(),
-                );
+        $target = Target::fromPair($handler->class, $handler->method);
+        $envelope = $envelope->with(new TargetHandler($target));
+        $pipeline = $this->interceptorPipeline;
 
-                // Run interceptors pipeline
-                return $this->interceptorPipeline->handle($callContext);
-            },
+        return new HandlerDescriptor(
+            handler: static fn(mixed ...$arguments): mixed => $pipeline->handle(new CallContext(
+                $target,
+                $arguments,
+                $envelope->all(),
+            )),
             options: $handler->options,
         );
     }

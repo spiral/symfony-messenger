@@ -6,17 +6,18 @@ namespace Spiral\Messenger\Pipeline;
 
 use RoadRunner\Lock\LockInterface;
 use Spiral\Core\Attribute\Singleton;
-use Spiral\Core\Container;
-use Spiral\Messenger\Attribute\PipelineDefinition;
 use Spiral\RoadRunner\Jobs\JobsInterface;
 use Spiral\RoadRunner\Jobs\Queue\CreateInfoInterface;
 use Spiral\Tokenizer\Attribute\TargetClass;
-use Spiral\Tokenizer\TokenizationListenerInterface;
 
+/**
+ * Registers pipelines in the RoadRunner.
+ *
+ * @internal
+ */
 #[TargetClass(PipelineInterface::class)]
 #[Singleton]
-final class RoadRunnerPipelineRegistry implements PipelineRegistryInterface, TokenizationListenerInterface,
-                                                  PipelineAliasesProviderInterface
+final class RoadRunnerPipelineRegistry implements PipelineRegistryInterface
 {
     private const LOCK_RESOURCE = 'rr-jobs-registry';
 
@@ -26,19 +27,15 @@ final class RoadRunnerPipelineRegistry implements PipelineRegistryInterface, Tok
      */
     private array $usedPipelines = [];
 
-    /** @var array<non-empty-string, array{0: PipelineInterface, 1: non-empty-string|null}> */
-    private array $pipelines = [];
-
-    /** @var array<non-empty-string, non-empty-string> */
-    private array $pipelineAliases = [];
-
     public function __construct(
-        private readonly Container $container,
         private readonly JobsInterface $service,
         private readonly LockInterface $lock,
     ) {
     }
 
+    /**
+     * @param list<non-empty-string> $aliases
+     */
     public function register(CreateInfoInterface $info, array $aliases = [], bool $consume = true): void
     {
         $name = $info->getName();
@@ -77,7 +74,6 @@ final class RoadRunnerPipelineRegistry implements PipelineRegistryInterface, Tok
         return true;
     }
 
-
     private function registerPipeline(string $name): void
     {
         if (\in_array($name, $this->usedPipelines, true)) {
@@ -92,44 +88,5 @@ final class RoadRunnerPipelineRegistry implements PipelineRegistryInterface, Tok
         $existPipelines = \array_keys(\iterator_to_array($this->service->getIterator()));
 
         return \in_array($name, $existPipelines, true);
-    }
-
-    public function listen(\ReflectionClass $class): void
-    {
-        /** @var PipelineInterface $pipeline */
-        $pipeline = $this->container->get($class->getName());
-
-        $aliases = [];
-        $attrs = $class->getAttributes(PipelineDefinition::class);
-        if ($attrs !== []) {
-            /** @var PipelineDefinition $definition */
-            $definition = $attrs[0]->newInstance();
-            $aliases = $definition->aliases;
-        }
-
-        $this->pipelines[] = [$pipeline, $aliases];
-    }
-
-    public function finalize(): void
-    {
-        foreach ($this->pipelines as $pipeline) {
-            [$pipeline, $aliases] = $pipeline;
-            if (!$pipeline->shouldBeUsed()) {
-                continue;
-            }
-
-            $this->register(
-                info: $pipeline->info(),
-                aliases: $aliases,
-                consume: $pipeline->shouldConsume(),
-            );
-        }
-
-        $this->pipelines = [];
-    }
-
-    public function getAliases(): array
-    {
-        return $this->pipelineAliases;
     }
 }

@@ -6,6 +6,7 @@ namespace Spiral\Messenger\Middleware;
 
 use Spiral\Messenger\Attribute\RetryStrategy;
 use Spiral\Messenger\Stamp\RetryHandlerStamp;
+use Spiral\Messenger\Stamp\TargetHandler;
 use Symfony\Component\Messenger\Envelope;
 use Symfony\Component\Messenger\Exception\HandlerFailedException;
 use Symfony\Component\Messenger\Exception\RecoverableExceptionInterface;
@@ -36,19 +37,32 @@ final class SendFailedMessageForRetryMiddleware implements MiddlewareInterface
         } catch (\Throwable $e) {
             $strategy = null;
 
+            $refl = $envelope->last(TargetHandler::class)?->target->getReflection();
+
             if ($e instanceof HandlerFailedException) {
                 $exceptions = $e->getWrappedExceptions();
-                // get last key of array
-                $lastKey = \array_key_last($exceptions);
+                $last = \end($exceptions);
 
-                if ($lastKey === null) {
-                    throw $e;
+                if ($refl !== null) {
+                    // get last error
+                    $strategy = $this->getRetryStrategy($last, $refl);
+                } else {
+                    // get last key of array
+                    $lastKey = \array_key_last($exceptions);
+
+                    if ($lastKey === null) {
+                        throw $e;
+                    }
+
+                    try {
+                        [$handler, $method] = \explode('@', $lastKey);
+                        $refl = new \ReflectionMethod($handler, $method);
+                    } catch (\Throwable) {
+                        throw $e;
+                    }
+
+                    $strategy = $this->getRetryStrategy($exceptions[$lastKey], $refl);
                 }
-
-                [$handler, $method] = \explode('@', $lastKey);
-                $refl = new \ReflectionMethod($handler, $method);
-
-                $strategy = $this->getRetryStrategy($exceptions[$lastKey], $refl);
             }
 
             if ($strategy === null) {
