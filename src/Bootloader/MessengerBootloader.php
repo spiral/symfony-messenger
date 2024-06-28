@@ -102,7 +102,7 @@ final class MessengerBootloader extends Bootloader
                 // return \Spiral\Messenger\Sender\SendersLocator
                 // else
                 new SendersLocator(
-                    sendersMap: trap($provider->getSenders())->return(),
+                    sendersMap: $provider->getSenders(),
                     sendersLocator: $container,
                 )
         ];
@@ -139,17 +139,17 @@ final class MessengerBootloader extends Bootloader
         SendersLocatorInterface $sendersLocator,
         MessengerConfig $config,
     ): iterable {
-        yield MiddlewareRegistryInterface::HIGH_PRIORITY => new SendFailedMessageForRetryMiddleware(
+        yield MiddlewareRegistryInterface::LOW_PRIORITY => new SendFailedMessageForRetryMiddleware(
             sendersLocator: $sendersLocator,
             historySize: $config->getStampsHistorySize(),
         );
 
-        yield MiddlewareRegistryInterface::HIGH_PRIORITY => new SendMessageMiddleware(
+        yield MiddlewareRegistryInterface::LOW_PRIORITY => new SendMessageMiddleware(
             sendersLocator: $sendersLocator,
             allowNoSenders: true,
         );
 
-        yield MiddlewareRegistryInterface::HIGH_PRIORITY => new HandleMessageMiddleware(
+        yield MiddlewareRegistryInterface::LOW_PRIORITY => new HandleMessageMiddleware(
             handlersLocator: $handlersLocator,
         );
     }

@@ -41,16 +41,15 @@ final class RoadRunnerPipelineRegistry implements PipelineRegistryInterface, Tok
 
     public function register(CreateInfoInterface $info, array $aliases = [], bool $consume = true): void
     {
+        $name = $info->getName();
+        foreach ($aliases as $alias) {
+            $this->pipelineAliases[$alias] = $name;
+        }
+
         $status = $this->createPipeline($info);
 
         if (!$status) {
             return;
-        }
-
-        $name = $info->getName();
-
-        foreach ($aliases as $alias) {
-            $this->pipelineAliases[$alias] = $name;
         }
 
         $this->registerPipeline($name);

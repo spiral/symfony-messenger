@@ -78,6 +78,7 @@ final class RoadRunnerSender implements SenderInterface
                 name: $envelope->getMessage()::class,
                 payload: $payload['body'],
                 options: $options,
+                headers: $options->getHeaders(),
             );
 
             $sentTask = $this->jobs->connect($pipeline)->dispatch($task);

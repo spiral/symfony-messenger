@@ -29,10 +29,15 @@ composer require spiral/symfony-messenger
 After package install you need to register bootloader from the package.
 
 ```php
-protected const LOAD = [
-    // ...
-    \Spiral\Symfonymessenger\Bootloader\MessengerBootloader::class,
-];
+// Kernel.php
+public function defineBootloaders(): array
+{
+    return [
+        // ...
+        \Spiral\Messenger\Bootloader\MessengerBootloader::class,
+        // ...
+    ];
+}
 ```
 
 > Note: if you are using [`spiral/discoverer`](https://github.com/spiral/discoverer),
@@ -51,15 +56,6 @@ Please see [CHANGELOG](CHANGELOG.md) for more information on what has changed re
 ## Contributing
 
 Please see [CONTRIBUTING](.github/CONTRIBUTING.md) for details.
-
-## Security Vulnerabilities
-
-Please review [our security policy](../../security/policy) on how to report security vulnerabilities.
-
-## Credits
-
-- [butschster](https://github.com/spiral)
-- [All Contributors](../../contributors)
 
 ## License
 

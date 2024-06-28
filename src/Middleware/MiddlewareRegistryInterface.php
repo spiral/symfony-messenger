@@ -11,6 +11,7 @@ interface MiddlewareRegistryInterface extends \IteratorAggregate
 {
     public const DEFAULT_PRIORITY = 10;
     public const HIGH_PRIORITY = 100;
+    public const LOW_PRIORITY = 1;
 
     /**
      * @param MiddlewareInterface|Autowire<MiddlewareInterface>|class-string<MiddlewareInterface> $middleware
