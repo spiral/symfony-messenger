@@ -36,6 +36,7 @@
         "spiral/config": "^3.13",
         "spiral/console": "^3.13",
         "spiral/core": "^3.13",
+        "spiral/interceptors": "^3.14",
         "spiral/hmvc": "^3.13",
         "spiral/roadrunner-jobs": "^4.3",
         "symfony/messenger": "^7.0",

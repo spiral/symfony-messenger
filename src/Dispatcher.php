@@ -4,10 +4,13 @@ declare(strict_types=1);
 
 namespace Spiral\Messenger;
 
+use Psr\Container\ContainerInterface;
+use Spiral\Attribute\DispatcherScope;
 use Spiral\Boot\DispatcherInterface;
 use Spiral\Boot\FinalizerInterface;
 use Spiral\Core\Container;
 use Spiral\Core\Scope;
+use Spiral\Core\ScopeInterface;
 use Spiral\Exceptions\ExceptionReporterInterface;
 use Spiral\Messenger\Dispatcher\TaskState;
 use Spiral\Messenger\Exception\RetryException;
@@ -30,11 +33,11 @@ use Symfony\Component\Messenger\Stamp\ReceivedStamp;
 use Symfony\Component\Messenger\Stamp\TransportMessageIdStamp;
 use Symfony\Component\Messenger\Transport\Serialization\SerializerInterface;
 
+#[DispatcherScope(scope: 'queue')]
 final class Dispatcher implements DispatcherInterface
 {
     public function __construct(
-        private readonly Container $container,
-        private readonly FinalizerInterface $finalizer,
+        private readonly ContainerInterface $container,
         private readonly EnvironmentInterface $environment,
         private readonly SerializerInterface $serializer,
         private readonly ExceptionReporterInterface $reporter,
@@ -53,6 +56,10 @@ final class Dispatcher implements DispatcherInterface
         /** @var ConsumerInterface $consumer */
         $consumer = $this->container->get(ConsumerInterface::class);
         $this->registerPipelines($this->container->get(PipelineRegistryInterface::class));
+        /** @var ScopeInterface $scopeRunner */
+        $scopeRunner = $this->container->get(ScopeInterface::class);
+        /** @var FinalizerInterface $finalizer */
+        $finalizer = $this->container->get(FinalizerInterface::class);
 
         while ($task = $consumer->waitTask()) {
             // TODO: use mapper for headers
@@ -69,23 +76,23 @@ final class Dispatcher implements DispatcherInterface
             );
 
             try {
-                $this->handleMessage($task, $envelope);
+                $this->handleMessage($scopeRunner, $task, $envelope);
             } catch (\Throwable $e) {
                 $this->reporter->report($e);
                 $task->fail($e);
             }
 
-            $this->finalizer->finalize(terminate: false);
+            $finalizer->finalize(terminate: false);
         }
     }
 
-    private function handleMessage(ReceivedTaskInterface $task, Envelope $envelope): void
+    private function handleMessage(ScopeInterface $scopeRunner, ReceivedTaskInterface $task, Envelope $envelope): void
     {
         $state = new TaskState($this->stampSerializer, $task);
         $context = new Context($envelope, $task);
-        $envelope = $this->container->runScope(
+        $envelope = $scopeRunner->runScope(
             new Scope(
-                name: 'jobs.queue',
+                name: 'task',
                 bindings: [
                     ContextInterface::class => $context,
                 ],
