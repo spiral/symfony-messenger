@@ -43,7 +43,7 @@
     },
     "require-dev": {
         "phpunit/phpunit": "^10",
-        "spiral/dumper": "^1.6",
+        "spiral/dumper": "^3.3.0",
         "spiral/framework": "dev-master as 3.14",
         "spiral/testing": "^2.7",
         "vimeo/psalm": "^5.24"
@@ -55,8 +55,8 @@
     },
     "autoload-dev": {
         "psr-4": {
-            "Spiral\\Messenger\\Tests\\App\\": "tests/app",
-            "Spiral\\Messenger\\Tests\\": "tests/src"
+            "Spiral\\Messenger\\Tests\\Functional\\": "tests/Functional",
+            "Spiral\\Messenger\\Tests\\Unit\\": "tests/Unit"
         }
     },
     "scripts": {

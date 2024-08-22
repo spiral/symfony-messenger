@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Spiral\Messenger\Tests\App\Message;
+namespace Spiral\Messenger\Tests\Functional\App\Message;
 
 use Spiral\Messenger\Attribute\Async;
 use Spiral\Messenger\Attribute\TargetSender;

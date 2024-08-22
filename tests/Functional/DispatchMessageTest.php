@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace Spiral\Messenger\Tests;
+namespace Spiral\Messenger\Tests\Functional;
 
 use Ramsey\Uuid\Uuid;
 use Spiral\Messenger\Dispatcher;
 use Spiral\Messenger\Exception\StopWorkerException;
-use Spiral\Messenger\Tests\App\Message\Message;
+use Spiral\Messenger\Tests\Functional\App\Message\Message;
 use Spiral\RoadRunner\Payload;
 
 final class DispatchMessageTest extends TestCase
