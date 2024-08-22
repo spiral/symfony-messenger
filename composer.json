@@ -42,10 +42,9 @@
         "symfony/serializer": "^7.0"
     },
     "require-dev": {
-        "buggregator/trap": "^1.6",
-        "mockery/mockery": "^1.5",
         "phpunit/phpunit": "^10",
-        "spiral/framework": "dev-refactor-interceptors-target as 3.13",
+        "spiral/dumper": "^1.6",
+        "spiral/framework": "dev-master as 3.14",
         "spiral/testing": "^2.7",
         "vimeo/psalm": "^5.24"
     },
