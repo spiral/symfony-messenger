@@ -10,6 +10,12 @@
     ],
     "homepage": "https://github.com/spiral/symfony-messenger",
     "license": "MIT",
+    "funding": [
+        {
+            "type": "github",
+            "url": "https://github.com/sponsors/spiral"
+        }
+    ],
     "authors": [
         {
             "name": "butschster",
