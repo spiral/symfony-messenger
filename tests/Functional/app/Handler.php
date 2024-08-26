@@ -2,14 +2,14 @@
 
 declare(strict_types=1);
 
-namespace Spiral\Messenger\Tests\App;
+namespace Spiral\Messenger\Tests\Functional\App;
 
 use Spiral\Core\Attribute\Proxy;
 use Spiral\Messenger\Attribute\HandlerMethod;
 use Spiral\Messenger\Attribute\RetryStrategy;
 use Spiral\Messenger\ContextInterface;
-use Spiral\Messenger\Tests\App\Message\Message;
-use Spiral\Messenger\Tests\App\Message\MessageWithSerializer;
+use Spiral\Messenger\Tests\Functional\App\Message\Message;
+use Spiral\Messenger\Tests\Functional\App\Message\MessageWithSerializer;
 use Symfony\Component\Messenger\Exception\RecoverableMessageHandlingException;
 
 final class Handler

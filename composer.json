@@ -10,6 +10,12 @@
     ],
     "homepage": "https://github.com/spiral/symfony-messenger",
     "license": "MIT",
+    "funding": [
+        {
+            "type": "github",
+            "url": "https://github.com/sponsors/spiral"
+        }
+    ],
     "authors": [
         {
             "name": "butschster",
@@ -30,16 +36,16 @@
         "spiral/config": "^3.13",
         "spiral/console": "^3.13",
         "spiral/core": "^3.13",
+        "spiral/interceptors": "^3.14",
         "spiral/hmvc": "^3.13",
         "spiral/roadrunner-jobs": "^4.3",
         "symfony/messenger": "^7.0",
         "symfony/serializer": "^7.0"
     },
     "require-dev": {
-        "buggregator/trap": "^1.6",
-        "mockery/mockery": "^1.5",
         "phpunit/phpunit": "^10",
-        "spiral/framework": "dev-refactor-interceptors-target as 3.13",
+        "spiral/dumper": "^3.3.0",
+        "spiral/framework": "dev-master as 3.14",
         "spiral/testing": "^2.7",
         "vimeo/psalm": "^5.24"
     },
@@ -50,8 +56,8 @@
     },
     "autoload-dev": {
         "psr-4": {
-            "Spiral\\Messenger\\Tests\\App\\": "tests/app",
-            "Spiral\\Messenger\\Tests\\": "tests/src"
+            "Spiral\\Messenger\\Tests\\Functional\\": "tests/Functional",
+            "Spiral\\Messenger\\Tests\\Unit\\": "tests/Unit"
         }
     },
     "scripts": {

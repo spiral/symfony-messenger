@@ -4,13 +4,16 @@ declare(strict_types=1);
 
 namespace Spiral\Messenger\Handler;
 
+use Psr\Container\ContainerInterface;
 use Psr\EventDispatcher\EventDispatcherInterface;
+use Spiral\Core\Attribute\Proxy;
 use Spiral\Core\Attribute\Singleton;
-use Spiral\Core\InterceptorPipeline;
 use Spiral\Interceptors\Context\CallContext;
 use Spiral\Interceptors\Context\Target;
+use Spiral\Interceptors\Handler\InterceptorPipeline;
 use Spiral\Interceptors\Handler\ReflectionHandler;
 use Spiral\Interceptors\HandlerInterface;
+use Spiral\Interceptors\InterceptorInterface;
 use Spiral\Messenger\Stamp\AllowMultipleHandlers;
 use Spiral\Messenger\Stamp\TargetHandler;
 use Symfony\Component\Messenger\Envelope;
@@ -25,26 +28,16 @@ use Symfony\Component\Messenger\Stamp\ReceivedStamp;
 #[Singleton]
 final class HandlersLocator implements HandlersLocatorInterface
 {
-    private readonly HandlerInterface $interceptorPipeline;
-
     public function __construct(
+        #[Proxy] private readonly ContainerInterface $container,
         private readonly HandlersRegistryInterface $handlers,
-        ?EventDispatcherInterface $dispatcher = null,
-        ReflectionHandler $reflectionHandler,
-    ) {
-        $this->interceptorPipeline = (new InterceptorPipeline($dispatcher))
-            ->withHandler($reflectionHandler);
-
-        // todo add interceptors list
-        // $this->interceptorPipeline->addInterceptor();
-    }
+        private readonly ?EventDispatcherInterface $dispatcher = null,
+    ) {}
 
     public function getHandlers(Envelope $envelope): iterable
     {
         $seen = [];
-
         $handlerTypes = $this->handlers->getHandlers();
-
         $isMultipleHandlersAllowed = $envelope->last(AllowMultipleHandlers::class) !== null;
 
         foreach (self::listTypes($envelope) as $type) {
@@ -60,7 +53,7 @@ final class HandlersLocator implements HandlersLocatorInterface
                     }
 
                     $name = $handlerDescriptor->getName();
-                    if (\in_array($name, $seen)) {
+                    if (\in_array($name, $seen, true)) {
                         continue;
                     }
 
@@ -106,15 +99,33 @@ final class HandlersLocator implements HandlersLocatorInterface
     {
         $target = Target::fromPair($handler->class, $handler->method);
         $envelope = $envelope->with(new TargetHandler($target));
-        $pipeline = $this->interceptorPipeline;
 
         return new HandlerDescriptor(
-            handler: static fn(mixed ...$arguments): mixed => $pipeline->handle(new CallContext(
-                $target,
-                $arguments,
-                $envelope->all(),
-            )),
+            handler: fn(mixed ...$arguments): mixed => $this
+                ->prepareInterceptorPipeline()
+                ->handle(new CallContext(
+                    $target,
+                    $arguments,
+                    $envelope->all(),
+                )),
             options: $handler->options,
         );
+    }
+
+    private function prepareInterceptorPipeline(): HandlerInterface {
+
+        $container = $this->container->get(ContainerInterface::class);
+        $h = new ReflectionHandler($container);
+        $pipeline = new InterceptorPipeline($this->dispatcher);
+
+        /** @var InterceptorInterface[] $interceptors */
+        $interceptors = [];
+        // todo resolve interceptors
+        // foreach ([] as $interceptor) {
+        //    $interceptors[] = $container->get($interceptor);
+        // }
+        $pipeline = $pipeline->withInterceptors(...$interceptors);
+
+        return $pipeline->withHandler($h);
     }
 }

@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Spiral\Messenger\Tests\Mock;
+namespace Spiral\Messenger\Tests\Functional\Mock;
 
 use Mockery\MockInterface;
 use PHPUnit\Framework\TestCase;

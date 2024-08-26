@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Spiral\Messenger\Tests;
+namespace Spiral\Messenger\Tests\Functional;
 
 final class DispatchMessageWithRetryTest extends TestCase
 {

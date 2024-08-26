@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Spiral\Messenger\Tests\App;
+namespace Spiral\Messenger\Tests\Functional\App;
 
 use Spiral\Boot\Bootloader\ConfigurationBootloader;
 use Spiral\Boot\Bootloader\CoreBootloader;

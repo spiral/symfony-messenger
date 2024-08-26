@@ -1,13 +1,13 @@
 <?php
 
-namespace Spiral\Messenger\Tests;
+namespace Spiral\Messenger\Tests\Functional;
 
 use Mockery\MockInterface;
 use Spiral\Core\Container;
-use Spiral\Messenger\Tests\App\Kernel;
-use Spiral\Messenger\Tests\Mock\ConsumerMock;
-use Spiral\Messenger\Tests\Mock\JobsMock;
-use Spiral\Messenger\Tests\Mock\SerializerMock;
+use Spiral\Messenger\Tests\Functional\App\Kernel;
+use Spiral\Messenger\Tests\Functional\App\Mock\ConsumerMock;
+use Spiral\Messenger\Tests\Functional\App\Mock\JobsMock;
+use Spiral\Messenger\Tests\Functional\App\Mock\SerializerMock;
 use Spiral\RoadRunner\Jobs\ConsumerInterface;
 use Spiral\RoadRunner\WorkerInterface;
 use Spiral\Serializer\SerializerRegistryInterface;

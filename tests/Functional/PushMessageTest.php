@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace Spiral\Messenger\Tests;
+namespace Spiral\Messenger\Tests\Functional;
 
 use Spiral\Messenger\Stamp\PipelineStamp;
-use Spiral\Messenger\Tests\App\Message\MessageWithPipeline;
-use Spiral\Messenger\Tests\App\Message\MessageWithSerializer;
+use Spiral\Messenger\Tests\Functional\App\Message\MessageWithPipeline;
+use Spiral\Messenger\Tests\Functional\App\Message\MessageWithSerializer;
 use Spiral\RoadRunner\Jobs\Task\PreparedTask;
 use Symfony\Component\Messenger\Stamp\SerializerStamp;
 
