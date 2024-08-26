@@ -6,11 +6,13 @@ namespace Spiral\Messenger\Config;
 
 use Spiral\Core\Container\Autowire;
 use Spiral\Core\InjectableConfig;
+use Spiral\Interceptors\InterceptorInterface;
 use Symfony\Component\Messenger\Middleware\MiddlewareInterface;
 use Symfony\Component\Messenger\Transport\Sender\SenderInterface;
 
 /**
  * @psalm-type Middleware = class-string<MiddlewareInterface>|MiddlewareInterface|Autowire<MiddlewareInterface>
+ * @psalm-type Interceptor = class-string<InterceptorInterface>|InterceptorInterface|Autowire<InterceptorInterface>
  */
 final class MessengerConfig extends InjectableConfig
 {
@@ -22,9 +24,13 @@ final class MessengerConfig extends InjectableConfig
      *     pipelineAliases: array<non-empty-string, non-empty-string>,
      *     stampsHistorySize: positive-int,
      *     middlewares: Middleware[],
+     *     interceptors: array{
+     *         inbound: array<Interceptor>,
+     *         outbound: array<Interceptor>,
+     *     },
      *     routerMiddlewares: Middleware[],
      *     senders: array{
-     *      map: array<non-empty-string, non-empty-string|class-string<SenderInterface>>,
+     *         map: array<non-empty-string, non-empty-string|class-string<SenderInterface>>,
      *     }
      * }
      */
@@ -34,6 +40,10 @@ final class MessengerConfig extends InjectableConfig
         'stampsHistorySize' => 10,
         'middlewares' => [],
         'routerMiddlewares' => [],
+        'interceptors' => [
+            'inbound' => [],
+            'outbound' => [],
+        ],
         'senders' => [
             'map' => [],
         ],
@@ -61,6 +71,26 @@ final class MessengerConfig extends InjectableConfig
     }
 
     /**
+     * Get inbound interceptors that are applied to messages before they are consumed.
+     *
+     * @return array<Interceptor>
+     */
+    public function getConsumeInterceptors(): array
+    {
+        return $this->config['interceptors']['inbound'] ?? [];
+    }
+
+    /**
+     * Get outbound interceptors that are applied to messages before they are sent.
+     *
+     * @return array<Interceptor>
+     */
+    public function getPushInterceptors(): array
+    {
+        return $this->config['interceptors']['outbound'] ?? [];
+    }
+
+    /**
      * Get the default pipeline name. (It can be an alias or a real pipeline name)
      *
      * @return non-empty-string|null
@@ -80,6 +110,9 @@ final class MessengerConfig extends InjectableConfig
         return $this->config['pipelineAliases'];
     }
 
+    /**
+     * @return positive-int
+     */
     public function getStampsHistorySize(): int
     {
         return $this->config['stampsHistorySize'];
