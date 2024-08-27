@@ -36,7 +36,6 @@ use Symfony\Component\Messenger\MessageBus;
 use Symfony\Component\Messenger\MessageBusInterface;
 use Symfony\Component\Messenger\Middleware\HandleMessageMiddleware;
 use Symfony\Component\Messenger\Middleware\SendMessageMiddleware;
-use Symfony\Component\Messenger\Transport\Sender\SendersLocator;
 use Symfony\Component\Messenger\Transport\Sender\SendersLocatorInterface;
 use Symfony\Component\Messenger\Transport\Serialization\SerializerInterface;
 
@@ -102,7 +101,7 @@ final class MessengerBootloader extends Bootloader
                 [
 
                 ],
-            )
+            ),
         ];
     }
 

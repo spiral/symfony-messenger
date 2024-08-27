@@ -89,12 +89,10 @@ final class Dispatcher implements DispatcherInterface
     private function handleMessage(ScopeInterface $scopeRunner, ReceivedTaskInterface $task, Envelope $envelope): void
     {
         $state = new TaskState($this->stampSerializer, $task);
-        $context = new Context($envelope, $task);
         $envelope = $scopeRunner->runScope(
             new Scope(
-                name: 'task',
                 bindings: [
-                    ContextInterface::class => $context,
+                    ReceivedTaskInterface::class => $task,
                 ],
             ),
             static fn(Container $container): Envelope => $container

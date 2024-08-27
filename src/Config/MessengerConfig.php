@@ -30,7 +30,7 @@ final class MessengerConfig extends InjectableConfig
      *     },
      *     routerMiddlewares: Middleware[],
      *     senders: array{
-     *         map: array<non-empty-string, non-empty-string|class-string<SenderInterface>>,
+     *         map: array<non-empty-string, list<class-string<SenderInterface>|non-empty-string>>,
      *     }
      * }
      */
@@ -119,7 +119,7 @@ final class MessengerConfig extends InjectableConfig
     }
 
     /**
-     * @return array<string, string[]>
+     * @return array<non-empty-string, list<class-string<SenderInterface>|non-empty-string>>
      */
     public function getSendersMap(): array
     {
