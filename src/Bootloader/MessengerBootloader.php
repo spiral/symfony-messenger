@@ -6,6 +6,7 @@ namespace Spiral\Messenger\Bootloader;
 
 use Psr\Container\ContainerInterface;
 use Spiral\Boot\Bootloader\Bootloader;
+use Spiral\Core\Container\Autowire;
 use Spiral\Exceptions\ExceptionReporterInterface;
 use Spiral\Messenger\Config\MessengerConfig;
 use Spiral\Messenger\Handler\HandlersLocator;
@@ -96,18 +97,12 @@ final class MessengerBootloader extends Bootloader
                 aliases: [...$aliases->getAliases(), ...$config->getPipelineAliases()],
                 defaultPipeline: $config->getDefaultPipeline(),
             ),
-            SendersLocatorInterface::class => static fn(
-                ContainerInterface $container,
-                SendersProviderInterface $provider,
-            ): SendersLocator =>
-                // todo:
-                // has sender interceptors?
-                // return \Spiral\Messenger\Sender\SendersLocator
-                // else
-                new SendersLocator(
-                    sendersMap: $provider->getSenders(),
-                    sendersLocator: $container,
-                )
+            SendersLocatorInterface::class => new Autowire(
+                \Spiral\Messenger\Sender\SendersLocator::class,
+                [
+
+                ],
+            )
         ];
     }
 

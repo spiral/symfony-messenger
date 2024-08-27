@@ -4,13 +4,20 @@ declare(strict_types=1);
 
 namespace Spiral\Messenger\Sender;
 
+use Psr\Container\ContainerExceptionInterface;
+use Psr\Container\ContainerInterface;
 use Psr\EventDispatcher\EventDispatcherInterface;
+use Spiral\Core\Attribute\Proxy;
 use Spiral\Core\Attribute\Singleton;
-use Spiral\Core\InterceptorPipeline;
+use Spiral\Core\Container\Autowire;
+use Spiral\Core\FactoryInterface;
 use Spiral\Interceptors\Context\CallContext;
 use Spiral\Interceptors\Context\Target;
+use Spiral\Interceptors\Handler\InterceptorPipeline;
 use Spiral\Interceptors\Handler\ReflectionHandler;
 use Spiral\Interceptors\HandlerInterface;
+use Spiral\Interceptors\InterceptorInterface;
+use Spiral\Messenger\Config\MessengerConfig;
 use Symfony\Component\Messenger\Envelope;
 use Symfony\Component\Messenger\Transport\Sender\SenderInterface;
 use Symfony\Component\Messenger\Transport\Sender\SendersLocatorInterface;
@@ -23,32 +30,31 @@ use Symfony\Component\Messenger\Transport\Sender\SendersLocatorInterface;
 #[Singleton]
 final class SendersLocator implements SendersLocatorInterface
 {
-    private readonly HandlerInterface $interceptorPipeline;
-
     public function __construct(
-        private readonly SendersLocatorInterface $locator,
-        ?EventDispatcherInterface $dispatcher = null,
-        ReflectionHandler $reflectionHandler,
-    ) {
-        $this->interceptorPipeline = (new InterceptorPipeline($dispatcher))
-            ->withHandler($reflectionHandler);
-
-        // todo add interceptors list
-        // $this->interceptorPipeline->addInterceptor();
-    }
+        #[Proxy] private readonly ContainerInterface $container,
+        private readonly SendersProviderInterface $provider,
+        private readonly ?EventDispatcherInterface $dispatcher = null,
+    ) {}
 
     public function getSenders(Envelope $envelope): iterable
     {
-        foreach ($this->locator->getSenders($envelope) as $alias => $sender) {
+        /** @var ContainerInterface $container */
+        $container = $this->container->get(ContainerInterface::class);
+        $locator = new \Symfony\Component\Messenger\Transport\Sender\SendersLocator(
+            sendersMap: $this->provider->getSenders(),
+            sendersLocator: $container,
+        );
+        $interceptors = $this->prepareInterceptorPipeline($container);
+
+        foreach ($locator->getSenders($envelope) as $alias => $sender) {
             \assert($sender instanceof SenderInterface);
 
             $target = Target::fromPair($sender, 'send');
-            $wrapper = new class($this->interceptorPipeline, $target) implements SenderInterface {
+            $wrapper = new class($interceptors, $target) implements SenderInterface {
                 public function __construct(
                     private readonly HandlerInterface $handler,
                     private readonly Target $target,
-                ) {
-                }
+                ) {}
 
                 public function send(Envelope $envelope): Envelope
                 {
@@ -61,5 +67,47 @@ final class SendersLocator implements SendersLocatorInterface
 
             yield $alias => $wrapper;
         }
+    }
+
+    private function prepareInterceptorPipeline(ContainerInterface $container): HandlerInterface
+    {
+        /** @var FactoryInterface $factory */
+        $factory = $this->container->get(FactoryInterface::class);
+        /** @var MessengerConfig $config */
+        $config = $container->get(MessengerConfig::class);
+
+        $h = new ReflectionHandler($container);
+        $pipeline = new InterceptorPipeline($this->dispatcher);
+
+        /** @var InterceptorInterface[] $interceptors */
+        $interceptors = [];
+        foreach ($config->getOutboundInterceptors() as $interceptor) {
+            $interceptors[] = $this->autowire($interceptor, $container, $factory);
+        }
+
+        $pipeline = $pipeline->withInterceptors(...$interceptors);
+
+        return $pipeline->withHandler($h);
+    }
+
+    /**
+     * @template T of InterceptorInterface
+     *
+     * @param class-string<T>|Autowire<T>|T $id
+     *
+     * @return T
+     *
+     * @throws ContainerExceptionInterface
+     */
+    private function autowire(
+        string|object $id,
+        ContainerInterface $container,
+        FactoryInterface $factory,
+    ): InterceptorInterface {
+        return match (true) {
+            \is_string($id) => $container->get($id),
+            $id instanceof Autowire => $id->resolve($factory),
+            default => $id,
+        };
     }
 }
