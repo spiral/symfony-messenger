@@ -75,7 +75,7 @@ final class MessengerConfig extends InjectableConfig
      *
      * @return array<Interceptor>
      */
-    public function getConsumeInterceptors(): array
+    public function getInboundInterceptors(): array
     {
         return $this->config['interceptors']['inbound'] ?? [];
     }
@@ -85,7 +85,7 @@ final class MessengerConfig extends InjectableConfig
      *
      * @return array<Interceptor>
      */
-    public function getPushInterceptors(): array
+    public function getOutboundInterceptors(): array
     {
         return $this->config['interceptors']['outbound'] ?? [];
     }
