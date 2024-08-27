@@ -58,7 +58,7 @@ final class SendersLocator implements SendersLocatorInterface
 
                 public function send(Envelope $envelope): Envelope
                 {
-                    $context = new CallContext($this->target, [$envelope]);
+                    $context = new CallContext($this->target, [$envelope], $envelope->all());
                     $result = $this->handler->handle($context);
                     \assert($result instanceof Envelope);
                     return $result;
