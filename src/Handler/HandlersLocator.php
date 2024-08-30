@@ -4,18 +4,27 @@ declare(strict_types=1);
 
 namespace Spiral\Messenger\Handler;
 
+use Psr\Container\ContainerExceptionInterface;
 use Psr\Container\ContainerInterface;
 use Psr\EventDispatcher\EventDispatcherInterface;
 use Spiral\Core\Attribute\Proxy;
 use Spiral\Core\Attribute\Singleton;
+use Spiral\Core\Container\Autowire;
+use Spiral\Core\FactoryInterface;
+use Spiral\Core\Scope;
+use Spiral\Core\ScopeInterface;
 use Spiral\Interceptors\Context\CallContext;
 use Spiral\Interceptors\Context\Target;
 use Spiral\Interceptors\Handler\InterceptorPipeline;
 use Spiral\Interceptors\Handler\ReflectionHandler;
 use Spiral\Interceptors\HandlerInterface;
 use Spiral\Interceptors\InterceptorInterface;
+use Spiral\Messenger\Config\MessengerConfig;
+use Spiral\Messenger\Context;
+use Spiral\Messenger\ContextInterface;
 use Spiral\Messenger\Stamp\AllowMultipleHandlers;
 use Spiral\Messenger\Stamp\TargetHandler;
+use Spiral\RoadRunner\Jobs\Task\ReceivedTaskInterface;
 use Symfony\Component\Messenger\Envelope;
 use Symfony\Component\Messenger\Handler\HandlerDescriptor;
 use Symfony\Component\Messenger\Handler\HandlersLocatorInterface;
@@ -101,31 +110,67 @@ final class HandlersLocator implements HandlersLocatorInterface
         $envelope = $envelope->with(new TargetHandler($target));
 
         return new HandlerDescriptor(
-            handler: fn(mixed ...$arguments): mixed => $this
-                ->prepareInterceptorPipeline()
-                ->handle(new CallContext(
-                    $target,
-                    $arguments,
-                    $envelope->all(),
-                )),
+            handler: function (mixed ...$arguments) use ($target, $envelope): mixed {
+                /** @var ScopeInterface $scope */
+                $scope = $this->container->get(ScopeInterface::class);
+                /** @var ReceivedTaskInterface $task */
+                $task = $this->container->get(ReceivedTaskInterface::class);
+
+                return $scope->runScope(
+                    new Scope(
+                        name: 'task',
+                        bindings: [
+                            ContextInterface::class => new Context($envelope, $task),
+                        ],
+                    ),
+                    fn(ContainerInterface $container): mixed => $this
+                        ->prepareInterceptorPipeline($container)
+                        ->handle(new CallContext($target, $arguments, $envelope->all())),
+                );
+            },
             options: $handler->options,
         );
     }
 
-    private function prepareInterceptorPipeline(): HandlerInterface {
+    private function prepareInterceptorPipeline(ContainerInterface $container): HandlerInterface
+    {
+        /** @var FactoryInterface $factory */
+        $factory = $this->container->get(FactoryInterface::class);
+        /** @var MessengerConfig $config */
+        $config = $container->get(MessengerConfig::class);
 
-        $container = $this->container->get(ContainerInterface::class);
         $h = new ReflectionHandler($container);
         $pipeline = new InterceptorPipeline($this->dispatcher);
 
         /** @var InterceptorInterface[] $interceptors */
         $interceptors = [];
-        // todo resolve interceptors
-        // foreach ([] as $interceptor) {
-        //    $interceptors[] = $container->get($interceptor);
-        // }
+        foreach ($config->getInboundInterceptors() as $interceptor) {
+           $interceptors[] = $this->autowire($interceptor, $container, $factory);
+        }
+
         $pipeline = $pipeline->withInterceptors(...$interceptors);
 
         return $pipeline->withHandler($h);
+    }
+
+    /**
+     * @template T of InterceptorInterface
+     *
+     * @param class-string<T>|Autowire<T>|T $id
+     *
+     * @return T
+     *
+     * @throws ContainerExceptionInterface
+     */
+    private function autowire(
+        string|object $id,
+        ContainerInterface $container,
+        FactoryInterface $factory,
+    ): InterceptorInterface {
+        return match (true) {
+            \is_string($id) => $container->get($id),
+            $id instanceof Autowire => $id->resolve($factory),
+            default => $id,
+        };
     }
 }
