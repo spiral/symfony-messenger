@@ -118,7 +118,7 @@ final class HandlersLocator implements HandlersLocatorInterface
 
                 return $scope->runScope(
                     new Scope(
-                        name: 'task',
+                        name: 'queue-task',
                         bindings: [
                             ContextInterface::class => new Context($envelope, $task),
                         ],
