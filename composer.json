@@ -32,12 +32,12 @@
         "php": "^8.2",
         "roadrunner-php/lock": "^1.0",
         "spiral-packages/symfony-serializer": "^2.2",
-        "spiral/boot": "^3.13",
-        "spiral/config": "^3.13",
-        "spiral/console": "^3.13",
-        "spiral/core": "^3.13",
+        "spiral/boot": "^3.14",
+        "spiral/config": "^3.14",
+        "spiral/console": "^3.14",
+        "spiral/core": "^3.14",
         "spiral/interceptors": "^3.14",
-        "spiral/hmvc": "^3.13",
+        "spiral/hmvc": "^3.14",
         "spiral/roadrunner-jobs": "^4.3",
         "symfony/messenger": "^7.0",
         "symfony/serializer": "^7.0"
@@ -45,7 +45,7 @@
     "require-dev": {
         "phpunit/phpunit": "^10",
         "spiral/dumper": "^3.3.0",
-        "spiral/framework": "dev-master as 3.14",
+        "spiral/framework": "^3.14",
         "spiral/testing": "^2.7",
         "vimeo/psalm": "^5.24"
     },

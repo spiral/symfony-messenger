@@ -13,8 +13,8 @@ use Spiral\Core\Container\Autowire;
 use Spiral\Core\FactoryInterface;
 use Spiral\Interceptors\Context\CallContext;
 use Spiral\Interceptors\Context\Target;
+use Spiral\Interceptors\Handler\AutowireHandler;
 use Spiral\Interceptors\Handler\InterceptorPipeline;
-use Spiral\Interceptors\Handler\ReflectionHandler;
 use Spiral\Interceptors\HandlerInterface;
 use Spiral\Interceptors\InterceptorInterface;
 use Spiral\Messenger\Config\MessengerConfig;
@@ -76,7 +76,7 @@ final class SendersLocator implements SendersLocatorInterface
         /** @var MessengerConfig $config */
         $config = $container->get(MessengerConfig::class);
 
-        $h = new ReflectionHandler($container);
+        $h = new AutowireHandler($container);
         $pipeline = new InterceptorPipeline($this->dispatcher);
 
         /** @var InterceptorInterface[] $interceptors */
